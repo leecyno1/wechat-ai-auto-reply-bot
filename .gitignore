@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# WeChat User Data (contains session info, potentially sensitive)
+wechat_user_data/
+wechat_user_data_bot*/
+
+# Exported Data
+*.xlsx
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Cursor specific files
+.cursor/
+.cursorrules
+
+# Config file (optional - uncomment if you prefer not to commit config.json)
+# config.json 

@@ -1,0 +1,45 @@
+{
+    "web_monitor": {
+        "check_interval": 3,
+        "auto_reply_all": false,
+        "login_success_selector": ".main",
+        "last_message_selector": ".message.ng-scope",
+        "received_message_content_selector": ".js_message_plain",
+        "input_box_selector": "#editArea",
+        "active_chat_selector": ".chat_item.active",
+        "unread_msg_selector": ".chat_item:has(.web_wechat_reddot_middle)",
+        "contact_list_mode": "blacklist",
+        "contact_whitelist": [],
+        "contact_blacklist": ["文件传输助手", "微信团队"],
+        "group_mention_required": true,
+        "bot_group_nickname": "柠檬博士",
+        "group_chat_indicators": [],
+        "trigger_keywords": ["程胤总", "老公", "柠檬博士"],
+        "user_data_dir": "wechat_user_data_bot"
+    },
+    "ai_model": {
+        "model_type": "openai",
+        "api_key": "YOUR_AI_API_KEY_HERE_OR_SET_ENV_VAR",
+        "api_url": "https://api.siliconflow.cn/v1/chat/completions",
+        "model_name": "THUDM/GLM-4-32B-0414",
+        "system_prompt": "你是一个专业的投资人，请简洁，冷漠，有深度的回复，并说人话",
+        "max_tokens": 1500,
+        "temperature": 0.7,
+        "context_length": 5,
+        "contact_prompts": {"绝对收益讨论群": "你是一个资深的技术专家，专注于回答编程和架构问题。"},
+        "question_model_name": "THUDM/GLM-Z1-32B-0414",
+        "question_keywords": ["?", "怎么样", "为什么", "如何", "哪里", "哪个", "what", "who", "when", "where", "why", "how", "深入", "分析", "研究"]
+    },
+    "logger": {
+        "log_dir": "logs",
+        "log_level": "INFO"
+    },
+    "export": {
+        "output_file": "chat_log_export.xlsx",
+        "roadshow_keywords": ["腾讯会议", "会议号", "会议链接", "汇报", "研究", "路演"],
+        "appointment_keywords": ["参加", "地点", "报名", "预约", "调研", "上市公司"],
+        "opinion_keywords": ["观点", "判断", "结论", "市场", "分析", "预测", "建议", "研报", "认为", "觉得"],
+        "summarize_prompt_template": "请总结以下关于{category}的聊天记录要点，不超过500字：\n\n{messages}",
+        "max_messages_for_summary": 100
+    }
+}
