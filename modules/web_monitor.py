@@ -34,13 +34,9 @@ class WebMonitor:
         self.group_mention_required = self.config.get('group_mention_required', True)
         self.bot_group_nickname = self.config.get('bot_group_nickname', '机器人小助手botAI')
         self.group_chat_indicators = self.config.get('group_chat_indicators', []) # For future group detection
-        # Load user data dir config
+        # Load user data dir config and use it directly
         self.user_data_dir_config = self.config.get('user_data_dir', 'wechat_user_data_bot')
-        # 添加时间戳以确保唯一性
-        timestamp = int(time.time())
-        self.user_data_dir_config = f"{self.user_data_dir_config}_{timestamp}"
-        # Construct absolute path relative to the script or workspace if needed
-        # Assuming the script runs from the project root where config.json is
+        # Construct absolute path directly from the config value
         self.user_data_dir_path = os.path.abspath(self.user_data_dir_config)
 
         if self.contact_list_mode not in ["blacklist", "whitelist"]:
