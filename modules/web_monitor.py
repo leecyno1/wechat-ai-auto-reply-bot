@@ -69,7 +69,7 @@ class WebMonitor:
             })
             
             self.logger.info("Navigating to WeChat Web...")
-            self.driver.get('https://web.wechat.com/')
+            self.driver.get('https://wx.qq.com/')
 
             # --- Check for existing login first --- 
             self.logger.info(f"Checking for existing login session using selector: {self.login_success_selector}")
