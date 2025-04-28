@@ -19,7 +19,7 @@
     },
     "ai_model": {
         "model_type": "openai",
-        "api_key": "YOUR_AI_API_KEY_HERE_OR_SET_ENV_VAR",
+        "api_key": "sk-ldpzmrtkxbfspfwcimqvlpttesrtarvsmtxfxxapbzcumfnu",
         "api_url": "https://api.siliconflow.cn/v1/chat/completions",
         "model_name": "THUDM/GLM-4-32B-0414",
         "system_prompt": "你是一个专业的投资人，请简洁，冷漠，有深度的回复，并说人话",

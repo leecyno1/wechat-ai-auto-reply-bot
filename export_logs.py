@@ -48,6 +48,8 @@ def categorize_message(message, export_config):
 def process_log_files(log_dir, export_config):
     """Reads all chat*.json logs, categorizes messages, and returns data."""
     all_data = []
+    # Additional list to store valid AI replies
+    ai_replies = []
     messages_by_category = {
         "路演信息": [],
         "调研预约": [],
@@ -59,6 +61,9 @@ def process_log_files(log_dir, export_config):
     log_files = glob.glob(chat_log_pattern)
     
     print(f"Found {len(log_files)} chat log files in {os.path.join(log_dir, 'chats')}")
+
+    # 用于跟踪已处理的消息，避免重复
+    processed_messages = set()
 
     for file_path in sorted(log_files): # Process in chronological order
         print(f"Processing log file: {file_path}...")
@@ -72,14 +77,32 @@ def process_log_files(log_dir, export_config):
                 for entry in chat_history:
                     if isinstance(entry, dict) and 'timestamp' in entry and 'message' in entry and 'reply' in entry:
                         message_text = entry['message']
+                        reply_text = entry['reply']
+                        timestamp = entry['timestamp']
+                        
+                        # 检查消息是否重复
+                        message_signature = f"{message_text}"
+                        if message_signature in processed_messages:
+                            continue
+                        
+                        processed_messages.add(message_signature)
+                        
                         category = categorize_message(message_text, export_config)
                         
                         all_data.append({
-                            'Timestamp': entry['timestamp'],
+                            'Timestamp': timestamp,
                             'Original Message': message_text,
-                            'Reply': entry['reply'],
+                            'Reply': reply_text,
                             'Category': category
                         })
+                        
+                        # 添加到AI回复列表（只记录有实际回复的消息）
+                        if reply_text and reply_text.strip():
+                            ai_replies.append({
+                                'Timestamp': timestamp,
+                                'Original Message': message_text,
+                                'AI Reply': reply_text
+                            })
                         
                         # Add original message to category list for summarization
                         if category != "其他":
@@ -92,7 +115,7 @@ def process_log_files(log_dir, export_config):
         except Exception as e:
             print(f"  Error processing file {file_path}: {e}")
             
-    return all_data, messages_by_category
+    return all_data, messages_by_category, ai_replies
 
 # --- Summarization --- 
 def summarize_categories(messages_by_category, ai_model, export_config, logger):
@@ -127,15 +150,35 @@ def summarize_categories(messages_by_category, ai_model, export_config, logger):
     return summaries
 
 # --- Excel Export --- 
-def export_to_excel(all_data, summaries, output_file):
-    """Exports the categorized data and summaries to an Excel file."""
+def export_to_excel(all_data, summaries, ai_replies, output_file):
+    """Exports the categorized data, summaries, and AI replies to an Excel file."""
     try:
+        # 将数据按时间倒序排序（最新的在前面）
         df = pd.DataFrame(all_data)
+        if not df.empty:
+            df['Timestamp'] = pd.to_datetime(df['Timestamp'], format='%Y-%m-%d %H:%M:%S')
+            df = df.sort_values(by='Timestamp', ascending=False).reset_index(drop=True)
+        
+        # 处理AI回复数据
+        ai_replies_df = pd.DataFrame(ai_replies)
+        if not ai_replies_df.empty:
+            ai_replies_df['Timestamp'] = pd.to_datetime(ai_replies_df['Timestamp'], format='%Y-%m-%d %H:%M:%S')
+            ai_replies_df = ai_replies_df.sort_values(by='Timestamp', ascending=False).reset_index(drop=True)
+        
         summary_df = pd.DataFrame(list(summaries.items()), columns=['Category', 'Summary'])
 
         with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
             df.to_excel(writer, sheet_name='Categorized Logs', index=False)
             summary_df.to_excel(writer, sheet_name='Summaries', index=False)
+            
+            # 添加新的AI回复sheet
+            if not ai_replies_df.empty:
+                ai_replies_df.to_excel(writer, sheet_name='AI回复', index=False)
+            else:
+                # 创建一个空DataFrame作为AI回复sheet
+                pd.DataFrame(columns=['Timestamp', 'Original Message', 'AI Reply']).to_excel(
+                    writer, sheet_name='AI回复', index=False
+                )
         
         print(f"Successfully exported logs and summaries to {output_file}")
         
@@ -160,7 +203,7 @@ if __name__ == "__main__":
     ai_model = AIModel(exporter_logger, ai_cfg)
 
     # Process log files
-    categorized_data, messages_by_cat = process_log_files(log_dir, export_cfg)
+    categorized_data, messages_by_cat, ai_replies = process_log_files(log_dir, export_cfg)
 
     if not categorized_data:
         print("No chat data found or processed. Exiting.")
@@ -170,7 +213,7 @@ if __name__ == "__main__":
         category_summaries = summarize_categories(messages_by_cat, ai_model, export_cfg, exporter_logger)
         
         # Export to Excel
-        export_to_excel(categorized_data, category_summaries, output_file)
+        export_to_excel(categorized_data, category_summaries, ai_replies, output_file)
 
     exporter_logger.info("====== Log Export Finished ======")
     print("Export process finished.")

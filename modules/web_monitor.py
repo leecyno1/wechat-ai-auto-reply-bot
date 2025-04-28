@@ -233,6 +233,8 @@ class WebMonitor:
                     mention_tag = f"@{self.bot_group_nickname}"
                     if mention_tag not in last_message_text:
                          self.logger.info(f"群聊消息未 @{self.bot_group_nickname}，跳过回复。")
+                         # 记录消息但不记录未回复原因
+                         self.logger.log_chat(last_message_text, "")
                          return False # Processed signature but didn't reply
                     else:
                          self.logger.info(f"群聊消息检测到 @{self.bot_group_nickname}。")
@@ -251,10 +253,15 @@ class WebMonitor:
                 
                 if triggered:
                     # Pass contact_name for per-contact prompts
-                    self.process_and_reply(contact_name, last_message_text)
+                    reply = self.process_and_reply(contact_name, last_message_text)
+                    # 记录带有实际回复的消息
+                    if reply:
+                        self.logger.log_chat(last_message_text, reply)
                     return True
                 else:
                     self.logger.info(f"消息不包含任何触发关键词，跳过回复。")
+                    # 记录消息但不记录未回复原因
+                    self.logger.log_chat(last_message_text, "")
                     return False
 
             else:
@@ -340,9 +347,7 @@ class WebMonitor:
 
             if not reply or not isinstance(reply, str) or not reply.strip():
                 self.logger.error(f"AI模型未能生成有效回复 (回复: {reply})")
-                return
-
-            self.logger.log_chat(message, reply)
+                return None
 
             try:
                 input_box = self.driver.find_element(By.CSS_SELECTOR, self.input_box_selector)
@@ -366,13 +371,17 @@ class WebMonitor:
                 input_box.send_keys(Keys.ENTER)
                 self.logger.info(f"已向 '{contact_name}' 发送回复 (处理换行后通过 Enter): {reply[:30]}...")
                 time.sleep(1)
+                return reply
             except NoSuchElementException:
                  self.logger.error(f"发送回复时未找到输入框 ({self.input_box_selector})")
+                 return None
             except Exception as send_err:
                  self.logger.error(f"使用输入框发送回复给 '{contact_name}' 时出错: {send_err}")
+                 return None
 
         except Exception as e:
             self.logger.error(f"回复流程 ('{contact_name}') 中出错: {str(e)}")
+            return None
     
     def close(self):
         """关闭浏览器驱动"""
