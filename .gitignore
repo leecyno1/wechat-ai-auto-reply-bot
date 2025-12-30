@@ -19,13 +19,19 @@ logs/
 # WeChat User Data (contains session info, potentially sensitive)
 wechat_user_data/
 wechat_user_data_bot*/
+wechat_user_data_*/
+wechat_user_data_wechat08_v2*/
 
 # Exported Data
 *.xlsx
+*.db
 
 # OS-specific files
 .DS_Store
 Thumbs.db
+
+# Editor
+.vscode/
 
 # Cursor specific files
 .cursor/

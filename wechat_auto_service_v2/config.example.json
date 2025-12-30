@@ -1,0 +1,53 @@
+{
+  "bot": {
+    "wxid": "wxid_demo_bot",
+    "nickname": "wechat-web-automation"
+  },
+  "web_monitor": {
+    "check_interval": 1,
+    "driver_lock_timeout_sec": 0.25,
+    "chat_load_timeout_sec": 2.0,
+    "message_load_timeout_sec": 2.0,
+    "message_load_timeout_fast_sec": 0.2,
+    "message_load_attempts": 3,
+    "message_load_fast_attempts": 1,
+    "active_chat_check_enabled": true,
+    "user_data_dir": "wechat_user_data_wechat08_v2",
+    "login_timeout": 120,
+    "login_success_selector": ".main",
+    "unread_msg_selector": ".chat_item:has(.web_wechat_reddot_middle)",
+    "active_chat_selector": ".chat_item.active",
+    "last_message_selector": ".message.ng-scope",
+    "received_message_content_selector": ".js_message_plain",
+    "input_box_selector": "#editArea",
+    "contact_list_mode": "blacklist",
+    "contact_whitelist": [],
+    "contact_blacklist": ["文件传输助手", "微信团队"],
+    "group_mention_required": true,
+    "bot_group_nickname": "LangBot",
+    "trigger_keywords": []
+  },
+  "server": {
+    "api_host": "0.0.0.0",
+    "api_port": 8059,
+    "ws_host": "0.0.0.0",
+    "ws_port": 8088
+  },
+  "merge": {
+    "enabled": true,
+    "window_sec": 0.8,
+    "max_messages": 5,
+    "max_chars": 2000
+  },
+  "send": {
+    "require_ack": true,
+    "ack_timeout_sec": 3.0,
+    "max_attempts": 3,
+    "backoff_base_sec": 0.6,
+    "backoff_max_sec": 4.0,
+    "request_timeout_sec": 12.0
+  },
+  "logging": {
+    "level": "INFO"
+  }
+}

@@ -1,157 +1,100 @@
-# 微信 AI 自动记录回复机器人 (WeChat AI Auto-Reply & Logger Bot) 🤖
+# wechat-auto-reply
 
-[English Version](#english-version)
+一个通过“网页微信 + 浏览器自动化(Selenium)”实现的微信自动监控与自动回复服务，并提供与 LangBot（`wechat08` 平台适配器）对接的 HTTP + WebSocket 网关。
 
-一个使用浏览器自动化和大型语言模型 (LLM) 来自动回复微信消息，并能分类记录和总结聊天内容的 Python 机器人。
+本项目的核心定位是：**用浏览器模拟真实用户操作来完成登录、收消息、发消息**。相比“抓包/逆向协议/私有 API”的方式，这种方案更容易在技术评审与合规沟通中说明实现路径（但仍需遵守微信/企业的使用规范，详见下方声明）。
 
-## ✨ 功能特性
+## 架构简介（强调：通过浏览器实现）
 
-*   **自动登录**: 通过扫描二维码自动登录网页版微信。
-*   **消息监控**: 实时监控指定联系人或群聊的新消息。
-*   **智能回复**:
-    *   利用配置的 LLM API (如 OpenAI, SiliconFlow 等) 生成回复。
-    *   可配置仅回复提及自己的群消息或特定关键词触发的消息。
-    *   可配置联系人白名单或黑名单。
-*   **聊天记录**: 将收到的消息和机器人的回复记录到日志文件 (`logs/chats/chat_YYYYMMDD.json`)。
-*   **记录导出与总结**:
-    *   运行 `export_logs.py` 脚本。
-    *   根据关键词将日志分类（如路演信息、调研预约、观点讨论等）。
-    *   调用 LLM API 对指定分类的聊天记录进行总结。
-    *   将分类后的完整记录和总结导出到 Excel 文件 (`chat_log_export.xlsx`)。
+**关键点：消息来源与发送都来自 `wx.qq.com` 的 UI/DOM，而不是直接接入微信内部消息流。**
 
-## ⚙️ 设置步骤
-
-1.  **克隆仓库**:
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/wechat-ai-auto-reply-bot.git # 请替换 YOUR_USERNAME
-    cd wechat-ai-auto-reply-bot
-    ```
-
-2.  **创建并激活虚拟环境**:
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate  # Linux/macOS
-    # .\\.venv\\Scripts\\activate  # Windows
-    ```
-
-3.  **安装依赖**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **配置环境变量**:
-    创建 `.env` 文件 (可以复制 `.env.example` 并修改)，并设置以下变量：
-    *   `AI_API_KEY`: 你的 LLM API 密钥 (例如 OpenAI 或 SiliconFlow 的 key)。
-
-5.  **修改配置文件 (`config.json`)**:
-    *   检查并根据需要修改 `web_monitor` 部分的配置，如联系人黑白名单 (`contact_blacklist`, `contact_whitelist`)、触发关键词 (`trigger_keywords`) 等。
-    *   检查并修改 `ai_model` 部分，确保 `api_url`, `model_name` 等设置正确。**API Key 已通过环境变量设置，无需在此处填写。**
-    *   检查并修改 `export` 部分的关键词 (`roadshow_keywords`, `appointment_keywords`, `opinion_keywords`) 和总结提示词 (`summarize_prompt_template`)。
-
-## 🚀 使用方法
-
-### 运行主机器人
-
-```bash
-python main.py
+```
+手机微信扫码登录
+      │
+      ▼
+Chrome 打开 wx.qq.com（持久化 profile 维持登录态）
+      │
+      ▼
+Selenium(WebMonitor) 轮询未读红点 / 活跃会话 DOM
+  - 提取新消息文本
+  - 过滤（黑/白名单、群 @ 规则、关键词）
+  - 将消息推送到 v2 网关 WS（wechat08 兼容）
+      │
+      ▼
+LangBot wechat08 平台适配器（WS 收消息 → LLM/插件流水线）
+      │
+      ▼
+LangBot 调用 v2 网关 HTTP /api/Msg/SendTxt 发回复
+      │
+      ▼
+v2 网关将“发送任务”入队（异步，不阻塞 LangBot）
+      │
+      ▼
+Selenium 选择会话 → 输入 → Enter 发送（必要时处理弹窗/重试）
 ```
 
-*   脚本会尝试打开浏览器并显示二维码，请使用手机微信扫描登录。
-*   登录成功后，机器人会开始监控消息并根据配置进行回复和记录。
+### 为什么“走浏览器”通常更稳妥
 
-### 运行记录导出和总结脚本
+- **不做协议逆向**：不需要抓取/复刻微信内部通信协议与加密参数，维护成本更低。
+- **行为路径更接近人工**：通过网页端 UI 完成操作，通常比非官方协议调用更不容易被识别为“异常 API 客户端”（不构成任何保证）。
+- **合规更容易解释**：从审计角度，技术方案是“操作官方网页端”，而非“绕过官方渠道访问内部接口”。
+
+### 合规与风险说明（重要）
+
+- 本项目**不属于微信官方 SDK/接口**，且依赖网页端页面结构，可能随微信网页端更新而失效。
+- 请确保使用场景符合微信及企业相关制度，不要用于群发骚扰、营销滥发等行为。
+- “更接近人工操作”并不代表“不会触发风控”，也不代表“合规无风险”。是否合规最终取决于你的业务场景、权限、内容与使用方式。
+
+## 快速开始（推荐：v2 + LangBot）
+
+### 1) 启动 v2 网关（扫码登录 + 自动监控）
+
+在本仓库目录执行：
 
 ```bash
-python export_logs.py
+./start_wechat_auto_v2.sh install
+./start_wechat_auto_v2.sh start
 ```
 
-*   脚本会读取 `logs/chats/` 目录下的所有 `.json` 日志文件。
-*   进行分类、总结，并将结果保存到项目根目录下的 `chat_log_export.xlsx` 文件。
+常用命令：
 
-## 📄 依赖
+- `./start_wechat_auto_v2.sh restart`：一键重启（会关闭占用 profile 的残留 Chrome 进程，解决“Chrome instance exited”等问题）
+- 健康检查：`curl http://127.0.0.1:8059/health`
 
-主要依赖库见 `requirements.txt` 文件，包括:
-*   `selenium`: 浏览器自动化。
-*   `webdriver-manager`: 自动管理浏览器驱动。
-*   `requests`: 发送 HTTP 请求 (用于调用 LLM API)。
-*   `pandas`: 处理数据和导出 Excel。
-*   `openpyxl`: 读写 Excel 文件。
+配置文件：
+- `wechat_auto_service_v2/config.json`（首次启动会从 `wechat_auto_service_v2/config.example.json` 复制生成）
+
+### 2) 配置 LangBot 使用 wechat08 平台适配器
+
+LangBot 侧使用其内置的 `wechat08` 平台（无需你在 LangBot 里写新 adapter），只需要把网关地址指向本项目。
+
+**如果 LangBot 运行在 Docker 里**（最常见）：
+- `wechat08_api_base`: `http://host.docker.internal:8059/api`
+- `wechat08_ws_base`: `ws://host.docker.internal:8088/ws`
+
+**如果 LangBot 与本项目都运行在宿主机**：
+- `wechat08_api_base`: `http://127.0.0.1:8059/api`
+- `wechat08_ws_base`: `ws://127.0.0.1:8088/ws`
+
+`wxid` 需要与 `wechat_auto_service_v2/config.json` 的 `bot.wxid` 一致（Selenium 模式下无法稳定获得真实 wxid，这里采用约定值）。
+
+### 3) 验证链路是否通
+
+1. v2 启动后，看 `logs/wechat_auto_v2.out` 是否出现：
+   - `WeChat automation started.`
+   - `Uvicorn running on ...:8059` / `...:8088`
+2. LangBot 启动后，看它是否能连上 WS（无 `Connection refused`）
+3. 当有新消息时，v2 会通过 WS 推给 LangBot；LangBot 生成回复后会调 `SendTxt`
+
+调试发送任务状态（可选）：
+- `GET http://127.0.0.1:8059/api/Msg/SendTxtStatus?jobId=1`
+
+## 详细操作手册（LangBot 配合）
+
+请阅读：`README_LANGBOT_INTEGRATION.md`
 
 ---
 
-# English Version
+## Legacy（可选）
 
-A Python bot using browser automation and Large Language Models (LLMs) to auto-reply to WeChat messages and categorize, log, and summarize chat contents.
-
-## ✨ Features
-
-*   **Auto Login**: Automatically logs into WeChat Web by scanning a QR code.
-*   **Message Monitoring**: Monitors new messages from specified contacts or group chats in real-time.
-*   **Intelligent Replies**:
-    *   Generates replies using a configured LLM API (e.g., OpenAI, SiliconFlow).
-    *   Configurable to reply only to messages mentioning oneself in groups or triggered by specific keywords.
-    *   Configurable contact whitelist or blacklist.
-*   **Chat Logging**: Logs received messages and the bot's replies to log files (`logs/chats/chat_YYYYMMDD.json`).
-*   **Log Export & Summarization**:
-    *   Run the `export_logs.py` script.
-    *   Categorizes logs based on keywords (e.g., roadshow info, appointment requests, opinions).
-    *   Calls the LLM API to summarize chat records for specified categories.
-    *   Exports the categorized full log and summaries to an Excel file (`chat_log_export.xlsx`).
-
-## ⚙️ Setup Instructions
-
-1.  **Clone the Repository**:
-    ```bash
-    git clone https://github.com/YOUR_USERNAME/wechat-ai-auto-reply-bot.git # Replace YOUR_USERNAME
-    cd wechat-ai-auto-reply-bot
-    ```
-
-2.  **Create and Activate Virtual Environment**:
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate  # Linux/macOS
-    # .\\.venv\\Scripts\\activate  # Windows
-    ```
-
-3.  **Install Dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Configure Environment Variables**:
-    Create a `.env` file (you can copy `.env.example` and modify it) and set the following variable:
-    *   `AI_API_KEY`: Your LLM API key (e.g., key for OpenAI or SiliconFlow).
-
-5.  **Modify Configuration File (`config.json`)**:
-    *   Review and modify the `web_monitor` section as needed, such as contact lists (`contact_blacklist`, `contact_whitelist`), trigger keywords (`trigger_keywords`), etc.
-    *   Review and modify the `ai_model` section, ensuring `api_url`, `model_name`, etc., are correct. **The API Key is set via environment variable and should not be filled here.**
-    *   Review and modify the `export` section's keywords (`roadshow_keywords`, `appointment_keywords`, `opinion_keywords`) and summary prompt (`summarize_prompt_template`).
-
-## 🚀 Usage
-
-### Running the Main Bot
-
-```bash
-python main.py
-```
-
-*   The script will attempt to open a browser and display a QR code. Scan it with your mobile WeChat to log in.
-*   Once logged in, the bot will start monitoring messages and replying/logging according to the configuration.
-
-### Running the Log Export and Summarization Script
-
-```bash
-python export_logs.py
-```
-
-*   The script reads all `.json` log files from the `logs/chats/` directory.
-*   It categorizes, summarizes, and saves the results to `chat_log_export.xlsx` in the project root directory.
-
-## 📄 Dependencies
-
-Key dependencies are listed in `requirements.txt`, including:
-*   `selenium`: Browser automation.
-*   `webdriver-manager`: Automatic browser driver management.
-*   `requests`: Making HTTP requests (for LLM API calls).
-*   `pandas`: Data manipulation and Excel export.
-*   `openpyxl`: Reading/writing Excel files.
+仓库仍保留 `main.py`（旧版：浏览器自动化 + 直接调用 LLM 自动回复 + 记录导出）。如果你只需要“本地自回复”且不接 LangBot，可以继续使用旧版。
