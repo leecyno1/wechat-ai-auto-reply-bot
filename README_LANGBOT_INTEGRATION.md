@@ -28,6 +28,12 @@
 ./start_wechat_auto_v2.sh start
 ```
 
+也可以用统一入口：
+
+```bash
+./start.sh v2
+```
+
 首次启动会打开 Chrome 并进入 `https://wx.qq.com/`，用手机微信扫码登录。
 
 常用命令：
@@ -99,6 +105,10 @@ LangBot 内置 `wechat08` 平台适配器会：
 网页端偶发弹窗（例如插件提示）会阻塞 Selenium。网关已加入弹窗自动 dismiss 逻辑；如果仍发生，直接：
 
 `./start_wechat_auto_v2.sh restart`
+
+或者：
+
+`./start.sh restart-v2`
 
 ### 6.4 回复慢、需要切换多次才发出
 

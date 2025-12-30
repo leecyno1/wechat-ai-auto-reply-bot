@@ -1,0 +1,36 @@
+{
+  "web_monitor": {
+    "check_interval": 2,
+    "auto_reply_all": false,
+    "login_success_selector": ".main",
+    "last_message_selector": ".message.ng-scope",
+    "received_message_content_selector": ".js_message_plain",
+    "input_box_selector": "#editArea",
+    "active_chat_selector": ".chat_item.active",
+    "unread_msg_selector": ".chat_item:has(.web_wechat_reddot_middle)",
+    "contact_list_mode": "blacklist",
+    "contact_whitelist": [],
+    "contact_blacklist": ["文件传输助手", "微信团队"],
+    "group_mention_required": true,
+    "bot_group_nickname": "机器人",
+    "trigger_keywords": [],
+    "user_data_dir": "wechat_user_data_bot"
+  },
+  "ai_model": {
+    "model_type": "openai",
+    "api_key": "",
+    "api_url": "https://api.openai.com/v1/chat/completions",
+    "model_name": "gpt-4o-mini",
+    "system_prompt": "你是一个有用的助手，请简洁、专业地回复。",
+    "max_tokens": 1200,
+    "temperature": 0.7,
+    "context_length": 5,
+    "contact_prompts": {},
+    "question_model_name": "",
+    "question_keywords": ["?", "为什么", "如何", "what", "why", "how"]
+  },
+  "logger": {
+    "log_dir": "logs",
+    "log_level": "INFO"
+  }
+}

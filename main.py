@@ -3,7 +3,9 @@ from modules.config import Config
 from modules.logger import Logger
 from modules.ai_model import AIModel
 from modules.web_monitor import WebMonitor
-import json
+import os
+from pathlib import Path
+import shutil
 
 def main():
     """主程序入口"""
@@ -11,14 +13,17 @@ def main():
     web_monitor = None # Define web_monitor outside try block for finally
     
     try:
-        # 加载配置
-        config = Config('config.json')
-        print("Config loaded.")
-        # 临时打印配置内容
-        print("="*50)
-        print("WEB MONITOR CONFIG:")
-        print(json.dumps(config.config.get('web_monitor', {}), indent=2, ensure_ascii=False))
-        print("="*50)
+        # 加载配置（优先使用本地 config.json；若不存在则从模板生成）
+        cfg_path = Path("config.json")
+        if not cfg_path.exists():
+            example = Path("config.example.json")
+            if example.exists():
+                shutil.copyfile(str(example), str(cfg_path))
+                print("Created config.json from config.example.json (please review and edit as needed).")
+            else:
+                raise FileNotFoundError("Missing config.json (and config.example.json not found).")
+
+        config = Config(str(cfg_path))
         # 初始化日志记录器
         # Pass the specific logger config section
         logger_config = config.get('logger') 

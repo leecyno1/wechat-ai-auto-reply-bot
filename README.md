@@ -1,8 +1,28 @@
-# wechat-auto-reply
+<p align="center">
+  <img src="assets/logo.svg" alt="wechat-auto-reply" width="680" />
+</p>
 
-一个通过“网页微信 + 浏览器自动化(Selenium)”实现的微信自动监控与自动回复服务，并提供与 LangBot（`wechat08` 平台适配器）对接的 HTTP + WebSocket 网关。
+<p align="center">
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-green.svg"></a>
+  <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
+  <img alt="Selenium" src="https://img.shields.io/badge/selenium-browser%20automation-0ea5e9.svg">
+</p>
+
+# wechat-auto-reply 🚀💬
+
+一个通过 **网页微信 + 浏览器自动化（Selenium）** 实现的微信自动监控与自动回复服务，并提供与 **LangBot（`wechat08` 平台适配器）** 对接的 **HTTP + WebSocket 网关** 🧩
 
 本项目的核心定位是：**用浏览器模拟真实用户操作来完成登录、收消息、发消息**。相比“抓包/逆向协议/私有 API”的方式，这种方案更容易在技术评审与合规沟通中说明实现路径（但仍需遵守微信/企业的使用规范，详见下方声明）。
+
+## 选择版本（V1 / V2）
+
+- **V2（推荐）**：`wechat_auto_service_v2/` ✅
+  - 作为 wechat08 兼容网关接入 LangBot（WS 收消息 + HTTP 发送）
+  - 回复链路更适合生产部署（发送入队即返回，避免 LangBot 10s 超时）⏱️
+  - 一键启动：`./start_wechat_auto_v2.sh start`
+- **V1（Legacy）**：本仓库根目录 `main.py` + `config.json`（本地直连 LLM 自回复）🧪
+  - 适合单机快速跑通（不接 LangBot）
+  - 详细说明与结构见：`README_V1.md`
 
 ## 架构简介（强调：通过浏览器实现）
 
@@ -98,3 +118,9 @@ LangBot 侧使用其内置的 `wechat08` 平台（无需你在 LangBot 里写新
 ## Legacy（可选）
 
 仓库仍保留 `main.py`（旧版：浏览器自动化 + 直接调用 LLM 自动回复 + 记录导出）。如果你只需要“本地自回复”且不接 LangBot，可以继续使用旧版。
+
+旧版详细说明（部署/结构/优缺点）：`README_V1.md` 📘
+
+## License
+
+MIT License. See `LICENSE`.

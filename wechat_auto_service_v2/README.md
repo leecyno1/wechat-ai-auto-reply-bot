@@ -23,6 +23,12 @@ cp wechat_auto_service_v2/config.example.json wechat_auto_service_v2/config.json
 ./start_wechat_auto_v2.sh
 ```
 
+或用统一入口：
+
+```bash
+./start.sh v2
+```
+
 2) 安装依赖
 
 ```bash

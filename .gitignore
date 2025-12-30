@@ -38,4 +38,8 @@ Thumbs.db
 .cursorrules
 
 # Config file (optional - uncomment if you prefer not to commit config.json)
-# config.json 
+config.json
+wechat_auto_service_v2/config.json
+
+# Launcher runtime
+.launcher/
